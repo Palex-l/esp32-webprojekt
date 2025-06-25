@@ -59,7 +59,7 @@ if (!file_exists($dataFile)) {
 }
 ?>
 
-<button class="btn" onclick="toggleBlink()">🔁 Blink-LED umschalten</button>
+<button class="btn" onclick="toggleBlink()">🔁 Blink-LED dddumschalten</button>
 
 <script>
 let sortAsc = true;
