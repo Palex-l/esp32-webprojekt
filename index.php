@@ -79,7 +79,10 @@ function sortTable(col) {
 function toggleBlink() {
     fetch("receiver.php?blink=on")
         .then(res => res.text())
-        .then(txt => alert("Blinksignal gesendet!\n" + txt))
+        .then(txt => {
+            alert("Blinksignal gesendet!");
+            console.log("Antwort: ", txt);
+        })
         .catch(err => alert("Fehler beim Senden des Blinksignals."));
 }
 </script>
