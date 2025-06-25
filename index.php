@@ -17,89 +17,70 @@ foreach ($zeilen as $zeile) {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Messdaten</title>
+    <title>Live Sensordaten</title>
     <style>
-        body { font-family: Arial; padding: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #aaa; padding: 8px; text-align: center; cursor: pointer; }
-        th.sort-asc::after { content: " ▲"; }
-        th.sort-desc::after { content: " ▼"; }
-        th { background-color: #f2f2f2; }
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+        table { border-collapse: collapse; width: 100%; background: white; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        th { cursor: pointer; background-color: #eee; }
+        .btn {
+            background-color: #4CAF50; color: white;
+            padding: 10px 20px; border: none;
+            cursor: pointer; margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
-<h2>Letzte Messwerte</h2>
+<h1>Live Sensordaten</h1>
 
-<?php if (empty($daten)): ?>
-    <p>Noch keine Daten vorhanden.</p>
-<?php else: ?>
-    <table id="messTabelle">
-        <thead>
-            <tr>
-                <th onclick="sortTable(0)">Datum</th>
-                <th onclick="sortTable(1)">Uhrzeit</th>
-                <th onclick="sortTable(2)">Sensor 1</th>
-                <th onclick="sortTable(3)">Sensor 2</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($daten as $eintrag): ?>
-                <tr>
-                    <td><?= htmlspecialchars($eintrag['datum']) ?></td>
-                    <td><?= htmlspecialchars($eintrag['zeit']) ?></td>
-                    <td><?= $eintrag['sensor1'] ?></td>
-                    <td><?= $eintrag['sensor2'] ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-<?php endif; ?>
+<?php
+$dataFile = "/tmp/daten.txt";
+if (!file_exists($dataFile)) {
+    echo "<p>Noch keine Daten vorhanden.</p>";
+} else {
+    $lines = file($dataFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    echo "<table id='sensortabelle'>
+            <thead><tr>
+                <th onclick='sortTable(0)'>Datum</th>
+                <th onclick='sortTable(1)'>Uhrzeit</th>
+                <th onclick='sortTable(2)'>Sensor 1</th>
+                <th onclick='sortTable(3)'>Sensor 2</th>
+            </tr></thead><tbody>";
+    foreach ($lines as $line) {
+        list($datetime, $s1, $s2) = explode(",", $line);
+        [$date, $time] = explode(" ", $datetime);
+        echo "<tr><td>$date</td><td>$time</td><td>$s1</td><td>$s2</td></tr>";
+    }
+    echo "</tbody></table>";
+}
+?>
+
+<button class="btn" onclick="toggleBlink()">🔁 Blink-LED umschalten</button>
 
 <script>
-let currentSortCol = null;
 let sortAsc = true;
 
-function sortTable(colIndex) {
-    const table = document.getElementById("messTabelle");
-    const tbody = table.tBodies[0];
-    const rows = Array.from(tbody.rows);
-
-    if (currentSortCol === colIndex) {
-        sortAsc = !sortAsc;
-    } else {
-        currentSortCol = colIndex;
-        sortAsc = true;
-    }
-
-    const ths = table.querySelectorAll("th");
-    ths.forEach((th, idx) => {
-        th.classList.remove("sort-asc", "sort-desc");
-        if (idx === colIndex) {
-            th.classList.add(sortAsc ? "sort-asc" : "sort-desc");
-        }
-    });
-
+function sortTable(col) {
+    const table = document.getElementById("sensortabelle");
+    const rows = Array.from(table.rows).slice(1);
     rows.sort((a, b) => {
-        const valA = a.cells[colIndex].textContent.trim();
-        const valB = b.cells[colIndex].textContent.trim();
-
-        const isNumber = !isNaN(valA) && !isNaN(valB);
-        let cmp = 0;
-
-        if (isNumber) {
-            cmp = parseFloat(valA) - parseFloat(valB);
-        } else {
-            cmp = valA.localeCompare(valB);
-        }
-
-        return sortAsc ? cmp : -cmp;
+        const valA = a.cells[col].textContent;
+        const valB = b.cells[col].textContent;
+        return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
     });
+    sortAsc = !sortAsc;
+    rows.forEach(row => table.tBodies[0].appendChild(row));
+}
 
-    rows.forEach(row => tbody.appendChild(row));
+function toggleBlink() {
+    fetch("receiver.php?blink=on")
+        .then(res => res.text())
+        .then(txt => alert("Blinksignal gesendet!\n" + txt))
+        .catch(err => alert("Fehler beim Senden des Blinksignals."));
 }
 </script>
 
