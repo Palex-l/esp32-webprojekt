@@ -8,8 +8,21 @@ if (!$data || !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d+,\d+$/', $da
 
 $datei = "daten.txt";
 
+// Sicherstellen, dass Datei existiert
+if (!file_exists($datei)) {
+    $handle = fopen($datei, "w");
+    if ($handle === false) {
+        http_response_code(500);
+        exit("Kann daten.txt nicht erstellen");
+    }
+    fclose($handle);
+}
+
 // Neue Zeile anhängen
-file_put_contents($datei, $data . PHP_EOL, FILE_APPEND);
+if (file_put_contents($datei, $data . PHP_EOL, FILE_APPEND) === false) {
+    http_response_code(500);
+    exit("Kann daten.txt nicht schreiben");
+}
 
 // Datei kürzen, wenn mehr als 1000 Zeilen
 $zeilen = file($datei, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -20,4 +33,3 @@ if (count($zeilen) > 1000) {
 
 echo "OK";
 ?>
-
