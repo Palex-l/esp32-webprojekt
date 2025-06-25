@@ -1,5 +1,5 @@
 <?php
-$datei = "daten.txt";
+$datei = "/tmp/daten.txt";
 $zeilen = file_exists($datei) ? file($datei, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
 
 $daten = [];
