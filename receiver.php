@@ -1,16 +1,23 @@
 <?php
-$sensor1 = $_GET['sensor1'] ?? '';
-$sensor2 = $_GET['sensor2'] ?? '';
+$data = $_GET['data'] ?? '';
 
-$filename = "/tmp/daten.txt";  // Pfad an Render angepasst
-
-if ($sensor1 !== '' && $sensor2 !== '') {
-    // Daten im Format "Sensor1: 55, Sensor2: 622" mit Zeitstempel speichern
-    $zeit = date("Y-m-d H:i:s");
-    $data = "$zeit - Sensor1: $sensor1, Sensor2: $sensor2\n";
-    file_put_contents($filename, $data, FILE_APPEND | LOCK_EX);
-    echo "Daten gespeichert!";
-} else {
-    echo "Keine Daten empfangen.";
+if (!$data || !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d+,\d+$/', $data)) {
+    http_response_code(400);
+    exit("Ungültige Daten");
 }
+
+$datei = "daten.txt";
+
+// Neue Zeile anhängen
+file_put_contents($datei, $data . PHP_EOL, FILE_APPEND);
+
+// Datei kürzen, wenn mehr als 1000 Zeilen
+$zeilen = file($datei, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+if (count($zeilen) > 1000) {
+    $neueZeilen = array_slice($zeilen, -1000);
+    file_put_contents($datei, implode(PHP_EOL, $neueZeilen) . PHP_EOL);
+}
+
+echo "OK";
 ?>
+
