@@ -59,7 +59,7 @@ if (!file_exists($dataFile)) {
 }
 ?>
 
-<button class="btn" onclick="toggleBlink()">🔁 Blink-LED umschalten</button>
+<button class="btn" onclick="toggleBlink()">🔁 LED einmal blinken</button>
 
 <script>
 let sortAsc = true;
@@ -79,7 +79,9 @@ function sortTable(col) {
 function toggleBlink() {
     fetch("receiver.php?blink=on")
         .then(res => res.text())
-        .then(txt => alert("Blinksignal gesendet!\n" + txt))
+        .then(txt => {
+            alert("Blinksignal gesendet:\n" + txt);
+        })
         .catch(err => alert("Fehler beim Senden des Blinksignals."));
 }
 </script>
