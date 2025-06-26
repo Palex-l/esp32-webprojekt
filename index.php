@@ -1,4 +1,10 @@
 <?php
+if (isset($_POST['toggle'])) {
+    $statusFile = "/tmp/status.txt";
+    $current = file_exists($statusFile) ? trim(file_get_contents($statusFile)) : "stop";
+    $newStatus = ($current === "start") ? "stop" : "start";
+    file_put_contents($statusFile, $newStatus);
+}
 $datei = "/tmp/daten.json";
 $daten = [];
 
@@ -13,7 +19,6 @@ if (file_exists($datei)) {
 
 <!DOCTYPE html>
 <html lang="de">
-// Website Titel
 <head>  
   <meta charset="UTF-8" />
   <title>Sonar Radar</title>
@@ -50,7 +55,15 @@ if (file_exists($datei)) {
 <body>
   <h1>Sonar Signatur</h1>
   <canvas id="radarCanvas" width="500" height="250"></canvas>
-    
+  <form method="post">
+  <button type="submit" name="toggle">
+    <?php
+      $statusFile = "/tmp/status.txt";
+      $status = file_exists($statusFile) ? trim(file_get_contents($statusFile)) : "stop";
+      echo ($status === "start") ? "Stoppe Messung" : "Starte Messung";
+    ?>
+  </button>
+  </form>
   <h2>Letzte Messwerte</h2>
   <table id="sensortabelle">
     <thead>
@@ -203,5 +216,6 @@ zeichneRadar();
 setInterval(aktualisiereDaten, 500);
     
 </script>
+    
 </body>
 </html>
