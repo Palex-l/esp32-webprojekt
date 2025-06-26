@@ -11,10 +11,23 @@ if (file_exists($datei)) {
 }
 ?>
 
+<?php
+$datei = "/tmp/daten.json";
+$daten = [];
+
+if (file_exists($datei)) {
+    $json = file_get_contents($datei);
+    $daten = json_decode($json, true);
+    if (!is_array($daten)) {
+        $daten = [];
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Sonar Radar</title>
   <style>
     body {
@@ -27,7 +40,7 @@ if (file_exists($datei)) {
       background-color: #000;
       margin: 20px auto;
       display: block;
-      border-radius: 100% 100% 0 0;
+      border-radius: 100% 100% 50 50;
     }
     table {
       margin: 20px auto;
@@ -60,112 +73,114 @@ if (file_exists($datei)) {
         <th onclick="sortTable(3)">Distanz</th>
       </tr>
     </thead>
-    <tbody id="sensordatenBody">
-      <!-- Wird dynamisch geladen -->
+    <tbody>
+      <?php
+        // Wir zeigen nur den neuesten Eintrag pro Winkel (max 20)
+        $maxWinkel = [];
+        $anzeigen = [];
+
+        // Neueste zuerst
+        $daten = array_reverse($daten);
+
+        foreach ($daten as $eintrag) {
+            $winkel = intval($eintrag['sensor1']);
+            if (!isset($maxWinkel[$winkel])) {
+                $maxWinkel[$winkel] = true;
+                $anzeigen[] = $eintrag;
+            }
+            if (count($anzeigen) >= 20) break;
+        }
+
+        foreach (array_reverse($anzeigen) as $e) {
+            echo "<tr>";
+            echo "<td>" . htmlspecialchars($e['datum']) . "</td>";
+            echo "<td>" . htmlspecialchars($e['zeit']) . "</td>";
+            echo "<td>" . intval($e['sensor1']) . "</td>";
+            echo "<td>" . intval($e['sensor2']) . "</td>";
+            echo "</tr>";
+        }
+
+        // Für JS-Radar-Daten: aktueller Satz (max 20)
+        echo "<script>var radardaten = " . json_encode($anzeigen) . ";</script>";
+      ?>
     </tbody>
   </table>
 
-  <script>
-    let sortDirection = true; // true = asc
-
-    function sortTable(colIndex) {
-      const tbody = document.getElementById("sensordatenBody");
-      const rows = Array.from(tbody.querySelectorAll("tr"));
-
-      rows.sort((a, b) => {
-        const valA = a.cells[colIndex].textContent;
-        const valB = b.cells[colIndex].textContent;
-        return sortDirection
-          ? valA.localeCompare(valB, undefined, { numeric: true })
-          : valB.localeCompare(valA, undefined, { numeric: true });
-      });
-
-      sortDirection = !sortDirection;
-      rows.forEach(row => tbody.appendChild(row));
+<script>
+function sortTable(col) {
+  const table = document.getElementById("sensortabelle");
+  const rows = Array.from(table.rows).slice(1);
+  const asc = !table.dataset.sort || table.dataset.sort !== "asc";
+  rows.sort((a, b) => {
+    const valA = a.cells[col].textContent;
+    const valB = b.cells[col].textContent;
+    // Zahlen vergleichen falls möglich
+    const numA = parseFloat(valA);
+    const numB = parseFloat(valB);
+    if (!isNaN(numA) && !isNaN(numB)) {
+      return asc ? numA - numB : numB - numA;
     }
+    return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+  });
+  table.dataset.sort = asc ? "asc" : "desc";
+  rows.forEach(row => table.tBodies[0].appendChild(row));
+}
 
-    function zeichneRadar(radardaten) {
-      const canvas = document.getElementById("radarCanvas");
-      const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+function zeichneRadar() {
+  const canvas = document.getElementById("radarCanvas");
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const mitteX = canvas.width / 2;
-      const mitteY = canvas.height;
-      const maxDist = 300;
+  const mitteX = canvas.width / 2;
+  const mitteY = canvas.height;
+  const maxDist = 300; // Max Distanz, entspricht Radius 200px
 
-      ctx.strokeStyle = "#0f0";
-      ctx.lineWidth = 1;
+  ctx.strokeStyle = "#0f0";
+  ctx.lineWidth = 1;
 
-      // Ringe
-      for (let r = 50; r <= 200; r += 50) {
-        ctx.beginPath();
-        ctx.arc(mitteX, mitteY, r, Math.PI, 2 * Math.PI);
-        ctx.stroke();
-      }
+  // Halbkreis & Ringe
+  for (let r = 50; r <= 200; r += 50) {
+    ctx.beginPath();
+    ctx.arc(mitteX, mitteY, r, Math.PI, 2 * Math.PI);
+    ctx.stroke();
+  }
 
-      // Linien alle 20°
-      for (let winkel = 0; winkel <= 180; winkel += 20) {
-        const rad = winkel * Math.PI / 180;
-        const x = mitteX + Math.cos(rad) * 200;
-        const y = mitteY - Math.sin(rad) * 200;
-        ctx.beginPath();
-        ctx.moveTo(mitteX, mitteY);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-      }
+  // Linien alle 20°
+  for (let winkel = 0; winkel <= 180; winkel += 20) {
+    const rad = winkel * Math.PI / 180;
+    const x = mitteX + Math.cos(rad) * 200;
+    const y = mitteY - Math.sin(rad) * 200;
+    ctx.beginPath();
+    ctx.moveTo(mitteX, mitteY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
 
-      // Punkte zeichnen
-      radardaten.forEach(p => {
-        const winkel = p.sensor1;
-        const dist = p.sensor2;
-        const radius = (dist / maxDist) * 200;
-        const rad = winkel * Math.PI / 180;
-        const x = mitteX + Math.cos(rad) * radius;
-        const y = mitteY - Math.sin(rad) * radius;
+  // Messpunkte zeichnen
+  if (typeof radardaten !== "undefined") {
+    radardaten.forEach(p => {
+      const winkel = p.winkel || p.sensor1;
+      const dist = p.dist || p.sensor2;
+      const radius = (dist / maxDist) * 200;
+      const rad = winkel * Math.PI / 180;
+      const x = mitteX + Math.cos(rad) * radius;
+      const y = mitteY - Math.sin(rad) * radius;
 
-        ctx.beginPath();
-        ctx.arc(x, y, 5, 0, 2 * Math.PI);
-        ctx.fillStyle = "lime";
-        ctx.fill();
-        ctx.strokeStyle = "darkgreen";
-        ctx.stroke();
-      });
-    }
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = "lime";
+      ctx.fill();
+      ctx.strokeStyle = "darkgreen";
+      ctx.stroke();
+    });
+  }
+}
 
-    async function ladeDaten() {
-      try {
-        const res = await fetch('daten.json');
-        const daten = await res.json();
+zeichneRadar();
 
-        // Letzte Winkel (jeder Winkel nur einmal)
-        const letzterWinkel = {};
-        const filtered = [];
-        for (let i = daten.length - 1; i >= 0; i--) {
-          const eintrag = daten[i];
-          if (!letzterWinkel[eintrag.sensor1]) {
-            letzterWinkel[eintrag.sensor1] = true;
-            filtered.push(eintrag);
-          }
-          if (filtered.length >= 20) break;
-        }
-
-        // Tabelle neu bauen
-        const tbody = document.getElementById("sensordatenBody");
-        tbody.innerHTML = '';
-        filtered.forEach(e => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${e.datum}</td><td>${e.zeit}</td><td>${e.sensor1}</td><td>${e.sensor2}</td>`;
-          tbody.appendChild(tr);
-        });
-
-        zeichneRadar(filtered);
-      } catch (err) {
-        console.error("Fehler beim Laden:", err);
-      }
-    }
-
-    ladeDaten();
-    setInterval(ladeDaten, 500); // nur Daten nachladen
-  </script>
+setInterval(() => {
+  location.reload();
+}, 500);
+</script>
 </body>
 </html>
