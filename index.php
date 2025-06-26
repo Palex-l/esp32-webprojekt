@@ -1,3 +1,4 @@
+//Json Datei Auslesen und in Php Array umwandeln.
 <?php
 $datei = "/tmp/daten.json";
 $daten = [];
@@ -10,7 +11,7 @@ if (file_exists($datei)) {
     }
 }
 ?>
-
+//Html Script der Website
 <!DOCTYPE html>
 <html lang="de">
 <head>
