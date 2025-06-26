@@ -14,7 +14,8 @@ if (file_exists($datei)) {
 // HTML Script der Website
 <!DOCTYPE html>
 <html lang="de">
-<head>
+// Website Titel
+<head> 
   <meta charset="UTF-8" />
   <title>Sonar Radar</title>
   <style>
@@ -46,11 +47,13 @@ if (file_exists($datei)) {
       background-color: #333;
     }
   </style>
+// Sonar Visualisierung
 </head>
 <body>
   <h1>Sonar Signatur</h1>
   <canvas id="radarCanvas" width="500" height="250"></canvas>
 
+  // Messwerttabelle
   <h2>Letzte Messwerte</h2>
   <table id="sensortabelle">
     <thead>
@@ -63,11 +66,10 @@ if (file_exists($datei)) {
     </thead>
     <tbody>
       <?php
-        // Wir zeigen nur den neuesten Eintrag pro Winkel (max 20)
+
         $maxWinkel = [];
         $anzeigen = [];
 
-        // Neueste zuerst
         $daten = array_reverse($daten);
 
         foreach ($daten as $eintrag) {
@@ -88,7 +90,6 @@ if (file_exists($datei)) {
             echo "</tr>";
         }
 
-        // Für JS-Radar-Daten: aktueller Satz (max 20)
         echo "<script>var radardaten = " . json_encode($anzeigen) . ";</script>";
       ?>
     </tbody>
@@ -201,6 +202,7 @@ function aktualisiereDaten() {
     
 zeichneRadar();
 
+// Daten alle 500ms Aktualisieren
 setInterval(aktualisiereDaten, 500);
     
 </script>
