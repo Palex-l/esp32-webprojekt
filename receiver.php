@@ -1,5 +1,5 @@
 <?php
-$dataFile = "daten.json";
+$dataFile = "/tmp/daten.json";
 $maxLines = 1000;
 
 if (isset($_GET['data'])) {
