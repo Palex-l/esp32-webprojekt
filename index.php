@@ -1,17 +1,12 @@
 <?php
 $datei = "/tmp/daten.json";
-$zeilen = file_exists($datei) ? file($datei, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
-
 $daten = [];
 
-foreach ($zeilen as $zeile) {
-    if (preg_match("/^([\d\-]+) ([\d:]+),(\d+),(\d+)$/", $zeile, $match)) {
-        $daten[] = [
-            'datum' => $match[1],
-            'zeit' => $match[2],
-            'sensor1' => (int)$match[3],
-            'sensor2' => (int)$match[4],
-        ];
+if (file_exists($datei)) {
+    $jsonInhalt = file_get_contents($datei);
+    $daten = json_decode($jsonInhalt, true);
+    if (!is_array($daten)) {
+        $daten = [];
     }
 }
 ?>
