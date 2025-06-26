@@ -104,7 +104,7 @@ if (file_exists($datei)) {
     function zeichneRadar() {
       const canvas = document.getElementById("radarCanvas");
       const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, 1000, 500);
+      ctx.clearRect(0, 0, 500, 250);
 
       const mitteX = 250;
       const mitteY = 250;
@@ -131,29 +131,20 @@ if (file_exists($datei)) {
 
       // Sektoren statt Punkte
       if (typeof radardaten !== "undefined") {
-radardaten.forEach(p => {
-  const winkel = p.winkel; // 0° (rechts) bis 180° (links)
-  const dist = p.dist;
-  const radius = (dist / maxDist) * 200;
+        radardaten.forEach(p => {
+          const winkel = p.winkel;
+          const dist = p.dist;
+          const radius = (dist / maxDist) * 200;
+          const rad = winkel * Math.PI / 180;
 
-  const mitteX = 250;
-  const mitteY = 250;
-
-  // Radarwinkel umrechnen: 0° = rechts, 90° = oben, 180° = links
-  const winkelRad = (Math.PI * (180 - winkel)) / 180;
-
-  // Start- und Endwinkel für den Kreisbogen (±5° als Sektor)
-  const sektorBreite = 10; // in Grad
-  const startWinkel = (Math.PI * (180 - (winkel - sektorBreite / 2))) / 180;
-  const endWinkel   = (Math.PI * (180 - (winkel + sektorBreite / 2))) / 180;
-
-  // Zeichne gefüllten Bogen (Kreissegment)
-  ctx.beginPath();
-  ctx.moveTo(mitteX, mitteY);
-  ctx.arc(mitteX, mitteY, radius, startWinkel, endWinkel, false);
-  ctx.closePath();
-  ctx.fillStyle = "rgba(0, 255, 0, 0.4)";
-  ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(mitteX, mitteY);
+          ctx.arc(mitteX, mitteY, radius, Math.PI - rad, Math.PI - rad + 0.1);
+          ctx.closePath();
+          ctx.fillStyle = "lime";
+          ctx.fill();
+        });
+      }
 });
 
 
