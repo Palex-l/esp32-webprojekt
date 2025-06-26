@@ -1,35 +1,44 @@
 <?php
-$data = $_GET['data'] ?? '';
+$dataFile = "daten.json";
+$maxLines = 1000;
 
-if (!$data || !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d+,\d+$/', $data)) {
-    http_response_code(400);
-    exit("Ungültige Daten");
-}
+if (isset($_GET['data'])) {
+    $data = trim($_GET['data']);
 
-$datei = "daten.txt";
+    if (!empty($data)) {
+        // Format: 2025-06-25 14:23:01,20,135
+        if (preg_match("/^([\d\-]+) ([\d:]+),(\d+),(\d+)$/", $data, $match)) {
+            $eintrag = [
+                "datum" => $match[1],
+                "zeit" => $match[2],
+                "sensor1" => (int)$match[3],
+                "sensor2" => (int)$match[4],
+            ];
 
-// Sicherstellen, dass Datei existiert
-if (!file_exists($datei)) {
-    $handle = fopen($datei, "w");
-    if ($handle === false) {
-        http_response_code(500);
-        exit("Kann daten.txt nicht erstellen");
+            $bestehend = [];
+
+            if (file_exists($dataFile)) {
+                $json = file_get_contents($dataFile);
+                $bestehend = json_decode($json, true);
+                if (!is_array($bestehend)) {
+                    $bestehend = [];
+                }
+            }
+
+            $bestehend[] = $eintrag;
+
+            if (count($bestehend) > $maxLines) {
+                $bestehend = array_slice($bestehend, -$maxLines);
+            }
+
+            if (file_put_contents($dataFile, json_encode($bestehend, JSON_PRETTY_PRINT)) === false) {
+                echo "Fehler beim Schreiben von daten.json";
+            } else {
+                echo "OK";
+            }
+        } else {
+            echo "Ungültiges Datenformat";
+        }
     }
-    fclose($handle);
 }
-
-// Neue Zeile anhängen
-if (file_put_contents($datei, $data . PHP_EOL, FILE_APPEND) === false) {
-    http_response_code(500);
-    exit("Kann daten.txt nicht schreiben");
-}
-
-// Datei kürzen, wenn mehr als 1000 Zeilen
-$zeilen = file($datei, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-if (count($zeilen) > 1000) {
-    $neueZeilen = array_slice($zeilen, -1000);
-    file_put_contents($datei, implode(PHP_EOL, $neueZeilen) . PHP_EOL);
-}
-
-echo "OK";
 ?>
