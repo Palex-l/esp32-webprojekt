@@ -133,7 +133,7 @@ function zeichneRadar() {
 
   const mitteX = canvas.width / 2;
   const mitteY = canvas.height;
-  const maxDist = 300; // Max Distanz, entspricht Radius 200px
+  const maxDist = 320; // Max Distanz, entspricht Radius 200px
 
   ctx.strokeStyle = "#0f0";
   ctx.lineWidth = 1;
@@ -212,7 +212,7 @@ function aktualisiereDaten() {
     
 zeichneRadar();
 
-setInterval(aktualisiereDaten, 500);
+setInterval(aktualisiereDaten, 100);
     
 </script>
 </body>
