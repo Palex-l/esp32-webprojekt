@@ -32,7 +32,7 @@ foreach ($zeilen as $zeile) {
       background-color: #000;
       margin: 20px auto;
       display: block;
-      border-radius: 100% 100% 0 0;
+      border-radius: 100% 100% 500 50;
     }
     table {
       margin: 20px auto;
@@ -117,7 +117,7 @@ foreach ($zeilen as $zeile) {
     function zeichneRadar() {
       const canvas = document.getElementById("radarCanvas");
       const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, 1000, 150);
+      ctx.clearRect(0, 0, 1000, 500);
 
       const mitteX = 250;
       const mitteY = 250;
