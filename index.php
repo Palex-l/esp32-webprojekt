@@ -117,7 +117,7 @@ foreach ($zeilen as $zeile) {
     function zeichneRadar() {
       const canvas = document.getElementById("radarCanvas");
       const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, 250, 150);
+      ctx.clearRect(0, 0, 1000, 150);
 
       const mitteX = 250;
       const mitteY = 250;
