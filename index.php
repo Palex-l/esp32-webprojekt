@@ -131,19 +131,22 @@ if (file_exists($datei)) {
 
       // Sektoren statt Punkte
       if (typeof radardaten !== "undefined") {
-        radardaten.forEach(p => {
-          const winkel = p.winkel;
-          const dist = p.dist;
-          const radius = (dist / maxDist) * 200;
-          const rad = winkel * Math.PI / 180;
+         radardaten.forEach(p => {
+         const winkel = p.winkel;
+         const dist = p.dist;
+         const radius = (dist / maxDist) * 200;
 
-          ctx.beginPath();
-          ctx.moveTo(mitteX, mitteY);
-          ctx.arc(mitteX, mitteY, radius, Math.PI - rad, Math.PI - rad + 0.1);
-          ctx.closePath();
-          ctx.fillStyle = "lime";
-          ctx.fill();
-        });
+         const radStart = (winkel - 5) * Math.PI / 180;
+         const radEnd = (winkel + 5) * Math.PI / 180;
+
+         ctx.beginPath();
+         ctx.moveTo(mitteX, mitteY);
+         ctx.arc(mitteX, mitteY, radius, Math.PI - radStart, Math.PI - radEnd, true);
+         ctx.closePath();
+         ctx.fillStyle = "rgba(0,255,0,0.4)";
+         ctx.fill();
+      });
+
       }
     }
 
