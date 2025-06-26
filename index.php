@@ -48,7 +48,7 @@ if (file_exists($datei)) {
   </style>
 </head>
 <body>
-  <h1>Radar</h1>
+  <h1>Sonar Signatur</h1>
   <canvas id="radarCanvas" width="500" height="250"></canvas>
 
   <h2>Letzte Messwerte</h2>
