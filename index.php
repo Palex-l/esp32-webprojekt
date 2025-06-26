@@ -175,12 +175,45 @@ function zeichneRadar() {
     });
   }
 }
+    
+function aktualisiereDaten() {
+  fetch('daten.php')
+    .then(response => response.json())
+    .then(data => {
+      radardaten = [];
 
+      const winkelTracker = {};
+      for (let i = data.length - 1; i >= 0 && radardaten.length < 20; i--) {
+        const d = data[i];
+        if (!winkelTracker[d.sensor1]) {
+          winkelTracker[d.sensor1] = true;
+          radardaten.push(d);
+        }
+      }
+
+      // Radar neu zeichnen
+      zeichneRadar();
+
+      // Tabelle aktualisieren
+      const tbody = document.querySelector('#sensortabelle tbody');
+      tbody.innerHTML = '';
+      radardaten.slice().reverse().forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${d.datum}</td>
+          <td>${d.zeit}</td>
+          <td>${d.sensor1}</td>
+          <td>${d.sensor2}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
+}
+    
 zeichneRadar();
 
-setInterval(() => {
-  location.reload();
-}, 500);
+setInterval(aktualisiereDaten, 500);
+    
 </script>
 </body>
 </html>
