@@ -130,23 +130,21 @@ if (file_exists($datei)) {
       }
 
 // Punkte zeichnen
-      if (typeof radardaten !== "undefined") {
-        radardaten.forEach(p => {
-          const winkel = p.winkel;
-          const dist = p.dist;
-          const radius = (dist / maxDist) * 200;
-          const rad = winkel * Math.PI / 180;
-          const x = mitteX + Math.cos(rad) * radius;
-          const y = mitteY - Math.sin(rad) * radius;
+if (typeof radardaten !== "undefined") {
+  radardaten.forEach(p => {
+    const winkel = p.winkel;
+    const dist = p.dist;
+    const radius = (dist / maxDist) * 200;
+    const rad = winkel * Math.PI / 180;
+    const x = mitteX + Math.cos(rad) * radius;
+    const y = mitteY - Math.sin(rad) * radius;
 
-          ctx.beginPath();
-          ctx.arc(x, y, 5, 0, 2 * Math.PI);
-          ctx.fillStyle = "lime";
-          ctx.fill();
-        });
-      }
-    }
-});
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, 2 * Math.PI);  // kleiner Kreis als Punkt
+    ctx.fillStyle = "lime";
+    ctx.fill();
+  });
+}
 
 
       }
