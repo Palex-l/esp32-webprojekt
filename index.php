@@ -107,25 +107,27 @@ if (file_exists($datei)) {
   </table>
 
 <script>
+let currentSortColumn = 0;
+let currentSortDirection = 'asc';
+
 function sortTable(col) {
   const table = document.getElementById("sensortabelle");
   const rows = Array.from(table.rows).slice(1);
-  const asc = !table.dataset.sort || table.dataset.sort !== "asc";
+  const asc = (currentSortColumn !== col || currentSortDirection === 'desc');
+  currentSortColumn = col;
+  currentSortDirection = asc ? 'asc' : 'desc';
+
+  // Speichern im localStorage
+  localStorage.setItem('sortColumn', currentSortColumn);
+  localStorage.setItem('sortDirection', currentSortDirection);
+
   rows.sort((a, b) => {
     const valA = a.cells[col].textContent;
     const valB = b.cells[col].textContent;
-    // Zahlen vergleichen falls möglich
-    const numA = parseFloat(valA);
-    const numB = parseFloat(valB);
-    if (!isNaN(numA) && !isNaN(numB)) {
-      return asc ? numA - numB : numB - numA;
-    }
-    return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    return asc ? valA.localeCompare(valB, undefined, {numeric: true}) : valB.localeCompare(valA, undefined, {numeric: true});
   });
-  table.dataset.sort = asc ? "asc" : "desc";
   rows.forEach(row => table.tBodies[0].appendChild(row));
 }
-
 function zeichneRadar() {
   const canvas = document.getElementById("radarCanvas");
   const ctx = canvas.getContext("2d");
@@ -194,19 +196,28 @@ function aktualisiereDaten() {
       // Radar neu zeichnen
       zeichneRadar();
 
-      // Tabelle aktualisieren
-      const tbody = document.querySelector('#sensortabelle tbody');
-      tbody.innerHTML = '';
-      radardaten.slice().reverse().forEach(d => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${d.datum}</td>
-          <td>${d.zeit}</td>
-          <td>${d.sensor1}</td>
-          <td>${d.sensor2}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+// Tabelle aktualisieren
+const tbody = document.querySelector('#sensortabelle tbody');
+tbody.innerHTML = '';
+radardaten.slice().reverse().forEach(d => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${d.datum}</td>
+    <td>${d.zeit}</td>
+    <td>${d.sensor1}</td>
+    <td>${d.sensor2}</td>
+  `;
+  tbody.appendChild(tr);
+});
+
+// Danach sortieren wie vorher
+const savedCol = parseInt(localStorage.getItem('sortColumn')) || 0;
+const savedDir = localStorage.getItem('sortDirection') || 'asc';
+if (savedCol !== null) {
+  currentSortColumn = savedCol;
+  currentSortDirection = savedDir;
+  sortTable(currentSortColumn);
+}
     });
 }
     
