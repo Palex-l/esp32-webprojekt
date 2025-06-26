@@ -1,10 +1,16 @@
 <?php
+if (isset($_POST['toggle'])) {
+    $statusFile = "/tmp/status.txt";
+    $current = file_exists($statusFile) ? trim(file_get_contents($statusFile)) : "stop";
+    $newStatus = ($current === "start") ? "stop" : "start";
+    file_put_contents($statusFile, $newStatus);
+}
 $datei = "/tmp/daten.json";
 $daten = [];
 
 if (file_exists($datei)) {
-    $jsonInhalt = file_get_contents($datei);
-    $daten = json_decode($jsonInhalt, true);
+    $json = file_get_contents($datei);
+    $daten = json_decode($json, true);
     if (!is_array($daten)) {
         $daten = [];
     }
@@ -13,7 +19,7 @@ if (file_exists($datei)) {
 
 <!DOCTYPE html>
 <html lang="de">
-<head>
+<head>  
   <meta charset="UTF-8" />
   <title>Sonar Radar</title>
   <style>
@@ -47,9 +53,17 @@ if (file_exists($datei)) {
   </style>
 </head>
 <body>
-  <h1>Radar Visualisierung</h1>
+  <h1>Sonar Signatur</h1>
   <canvas id="radarCanvas" width="500" height="250"></canvas>
-
+  <form method="post">
+  <button type="submit" name="toggle">
+    <?php
+      $statusFile = "/tmp/status.txt";
+      $status = file_exists($statusFile) ? trim(file_get_contents($statusFile)) : "stop";
+      echo ($status === "start") ? "Stoppe Messung" : "Starte Messung";
+    ?>
+  </button>
+  </form>
   <h2>Letzte Messwerte</h2>
   <table id="sensortabelle">
     <thead>
@@ -62,11 +76,10 @@ if (file_exists($datei)) {
     </thead>
     <tbody>
       <?php
-        // Wir zeigen nur den neuesten Eintrag pro Winkel (max 20)
+
         $maxWinkel = [];
         $anzeigen = [];
 
-        // Neueste zuerst
         $daten = array_reverse($daten);
 
         foreach ($daten as $eintrag) {
@@ -87,7 +100,6 @@ if (file_exists($datei)) {
             echo "</tr>";
         }
 
-        // Für JS-Radar-Daten: aktueller Satz (max 20)
         echo "<script>var radardaten = " . json_encode($anzeigen) . ";</script>";
       ?>
     </tbody>
@@ -120,7 +132,7 @@ function zeichneRadar() {
 
   const mitteX = canvas.width / 2;
   const mitteY = canvas.height;
-  const maxDist = 300; // Max Distanz, entspricht Radius 200px
+  const maxDist = 1001; // Max Distanz, entspricht Radius 200px
 
   ctx.strokeStyle = "#0f0";
   ctx.lineWidth = 1;
@@ -148,7 +160,8 @@ function zeichneRadar() {
     radardaten.forEach(p => {
       const winkel = p.winkel || p.sensor1;
       const dist = p.dist || p.sensor2;
-      const radius = (dist / maxDist) * 200;
+      const radius = (dist / 1000) * 200;
+      console.log(radius);
       const rad = winkel * Math.PI / 180;
       const x = mitteX + Math.cos(rad) * radius;
       const y = mitteY - Math.sin(rad) * radius;
@@ -162,12 +175,47 @@ function zeichneRadar() {
     });
   }
 }
+    
+function aktualisiereDaten() {
+  fetch('daten.php')
+    .then(response => response.json())
+    .then(data => {
+      radardaten = [];
 
+      const winkelTracker = {};
+      for (let i = data.length - 1; i >= 0 && radardaten.length < 20; i--) {
+        const d = data[i];
+        if (!winkelTracker[d.sensor1]) {
+          winkelTracker[d.sensor1] = true;
+          radardaten.push(d);
+        }
+      }
+
+      // Radar neu zeichnen
+      zeichneRadar();
+
+      // Tabelle aktualisieren
+      const tbody = document.querySelector('#sensortabelle tbody');
+      tbody.innerHTML = '';
+      radardaten.slice().reverse().forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${d.datum}</td>
+          <td>${d.zeit}</td>
+          <td>${d.sensor1}</td>
+          <td>${d.sensor2}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
+}
+    
 zeichneRadar();
 
-setInterval(() => {
-  location.reload();
-}, 500);
+// Daten alle 500ms Aktualisieren
+setInterval(aktualisiereDaten, 500);
+    
 </script>
+    
 </body>
 </html>

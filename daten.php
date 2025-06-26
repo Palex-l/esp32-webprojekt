@@ -1,10 +1,16 @@
 <?php
-$datei = "/tmp/daten.json"; // oder daten.txt falls du das verwendest, dann parse entsprechend
+header('Content-Type: application/json');
+
+$datei = "/tmp/daten.json";
+$daten = [];
 
 if (file_exists($datei)) {
-    header('Content-Type: application/json');
-    echo file_get_contents($datei);
-} else {
-    echo json_encode([]);
+    $json = file_get_contents($datei);
+    $daten = json_decode($json, true);
+    if (!is_array($daten)) {
+        $daten = [];
+    }
 }
+
+echo json_encode($daten);
 ?>

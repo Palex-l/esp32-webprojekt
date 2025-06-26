@@ -2,6 +2,12 @@
 $dataFile = "/tmp/daten.json";
 $maxLines = 1000;
 
+if (isset($_GET['status'])) {
+    $status = file_exists("/tmp/status.txt") ? trim(file_get_contents("/tmp/status.txt")) : "stop";
+    echo $status;
+    exit;
+}
+
 if (isset($_GET['data'])) {
     $data = trim($_GET['data']);
 
