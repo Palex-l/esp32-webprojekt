@@ -1,4 +1,3 @@
-// Json Datei Auslesen und in Php Array umwandeln.
 <?php
 $datei = "/tmp/daten.json";
 $daten = [];
@@ -11,11 +10,11 @@ if (file_exists($datei)) {
     }
 }
 ?>
-// HTML Script der Website
+
 <!DOCTYPE html>
 <html lang="de">
 // Website Titel
-<head> 
+<head>  
   <meta charset="UTF-8" />
   <title>Sonar Radar</title>
   <style>
@@ -47,13 +46,11 @@ if (file_exists($datei)) {
       background-color: #333;
     }
   </style>
-// Sonar Visualisierung
 </head>
 <body>
   <h1>Sonar Signatur</h1>
   <canvas id="radarCanvas" width="500" height="250"></canvas>
-
-  // Messwerttabelle
+    
   <h2>Letzte Messwerte</h2>
   <table id="sensortabelle">
     <thead>
