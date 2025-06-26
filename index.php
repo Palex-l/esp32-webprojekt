@@ -51,33 +51,40 @@ if (file_exists($datei)) {
   <canvas id="radarCanvas" width="500" height="250"></canvas>
 
   <h2>Letzte Messwerte</h2>
-  <div id="tabelle">
-    <table id="sensortabelle">
-      <thead>
-        <tr>
-          <th onclick="sortTable(0)">Datum</th>
-          <th onclick="sortTable(1)">Zeit</th>
-          <th onclick="sortTable(2)">Winkel</th>
-          <th onclick="sortTable(3)">Distanz</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach (array_reverse($daten) as $eintrag): ?>
-          <tr>
-            <td><?= $eintrag['datum'] ?></td>
-            <td><?= $eintrag['zeit'] ?></td>
-            <td><?= $eintrag['sensor1'] ?></td>
-            <td><?= $eintrag['sensor2'] ?></td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
+  <table id="sensortabelle">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0)">Datum</th>
+        <th onclick="sortTable(1)">Zeit</th>
+        <th onclick="sortTable(2)">Winkel</th>
+        <th onclick="sortTable(3)">Distanz</th>
+      </tr>
+    </thead>
+    <tbody id="sensordatenBody">
+      <!-- Wird dynamisch geladen -->
+    </tbody>
+  </table>
 
   <script>
-    let radardaten = <?= json_encode($radardaten); ?>;
+    let sortDirection = true; // true = asc
 
-    function zeichneRadar() {
+    function sortTable(colIndex) {
+      const tbody = document.getElementById("sensordatenBody");
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+
+      rows.sort((a, b) => {
+        const valA = a.cells[colIndex].textContent;
+        const valB = b.cells[colIndex].textContent;
+        return sortDirection
+          ? valA.localeCompare(valB, undefined, { numeric: true })
+          : valB.localeCompare(valA, undefined, { numeric: true });
+      });
+
+      sortDirection = !sortDirection;
+      rows.forEach(row => tbody.appendChild(row));
+    }
+
+    function zeichneRadar(radardaten) {
       const canvas = document.getElementById("radarCanvas");
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -89,12 +96,14 @@ if (file_exists($datei)) {
       ctx.strokeStyle = "#0f0";
       ctx.lineWidth = 1;
 
+      // Ringe
       for (let r = 50; r <= 200; r += 50) {
         ctx.beginPath();
         ctx.arc(mitteX, mitteY, r, Math.PI, 2 * Math.PI);
         ctx.stroke();
       }
 
+      // Linien alle 20°
       for (let winkel = 0; winkel <= 180; winkel += 20) {
         const rad = winkel * Math.PI / 180;
         const x = mitteX + Math.cos(rad) * 200;
@@ -105,64 +114,58 @@ if (file_exists($datei)) {
         ctx.stroke();
       }
 
-      if (radardaten) {
-        radardaten.forEach(p => {
-          const winkel = p.winkel;
-          const dist = p.dist;
-          const radius = (dist / maxDist) * 200;
-          const rad = winkel * Math.PI / 180;
-          const x = mitteX + Math.cos(rad) * radius;
-          const y = mitteY - Math.sin(rad) * radius;
+      // Punkte zeichnen
+      radardaten.forEach(p => {
+        const winkel = p.sensor1;
+        const dist = p.sensor2;
+        const radius = (dist / maxDist) * 200;
+        const rad = winkel * Math.PI / 180;
+        const x = mitteX + Math.cos(rad) * radius;
+        const y = mitteY - Math.sin(rad) * radius;
 
-          ctx.beginPath();
-          ctx.arc(x, y, 5, 0, 2 * Math.PI);
-          ctx.fillStyle = "lime";
-          ctx.fill();
-          ctx.strokeStyle = "darkgreen";
-          ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = "lime";
+        ctx.fill();
+        ctx.strokeStyle = "darkgreen";
+        ctx.stroke();
+      });
+    }
+
+    async function ladeDaten() {
+      try {
+        const res = await fetch('daten.json');
+        const daten = await res.json();
+
+        // Letzte Winkel (jeder Winkel nur einmal)
+        const letzterWinkel = {};
+        const filtered = [];
+        for (let i = daten.length - 1; i >= 0; i--) {
+          const eintrag = daten[i];
+          if (!letzterWinkel[eintrag.sensor1]) {
+            letzterWinkel[eintrag.sensor1] = true;
+            filtered.push(eintrag);
+          }
+          if (filtered.length >= 20) break;
+        }
+
+        // Tabelle neu bauen
+        const tbody = document.getElementById("sensordatenBody");
+        tbody.innerHTML = '';
+        filtered.forEach(e => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${e.datum}</td><td>${e.zeit}</td><td>${e.sensor1}</td><td>${e.sensor2}</td>`;
+          tbody.appendChild(tr);
         });
+
+        zeichneRadar(filtered);
+      } catch (err) {
+        console.error("Fehler beim Laden:", err);
       }
     }
 
-    zeichneRadar();
-
-    function sortTable(col) {
-      const table = document.getElementById("sensortabelle");
-      const rows = Array.from(table.rows).slice(1);
-      const asc = !table.dataset.sort || table.dataset.sort !== "asc";
-      rows.sort((a, b) => {
-        const valA = a.cells[col].textContent;
-        const valB = b.cells[col].textContent;
-        return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-      });
-      table.dataset.sort = asc ? "asc" : "desc";
-      rows.forEach(row => table.tBodies[0].appendChild(row));
-    }
-
-    // Alle 500ms nur Radar + Tabelle aktualisieren
-    setInterval(() => {
-      fetch('data.php')
-        .then(res => res.json())
-        .then(data => {
-          radardaten = data.radar;
-
-          // Tabelle neu bauen
-          const tbody = document.querySelector("#sensortabelle tbody");
-          tbody.innerHTML = "";
-          data.tabelle.forEach(eintrag => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${eintrag.datum}</td>
-              <td>${eintrag.zeit}</td>
-              <td>${eintrag.sensor1}</td>
-              <td>${eintrag.sensor2}</td>`;
-            tbody.appendChild(tr);
-          });
-
-          zeichneRadar();
-        });
-    }, 500);
+    ladeDaten();
+    setInterval(ladeDaten, 500); // nur Daten nachladen
   </script>
 </body>
-</html>
 </html>
