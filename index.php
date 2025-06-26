@@ -1,5 +1,5 @@
 <?php
-$datei = "daten.json";
+$datei = "/tmp/daten.json";
 $daten = [];
 
 if (file_exists($datei)) {
