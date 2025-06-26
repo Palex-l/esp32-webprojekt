@@ -1,4 +1,4 @@
-// region Json Datei Auslesen und in Php Array umwandeln.
+// Json Datei Auslesen und in Php Array umwandeln.
 <?php
 $datei = "/tmp/daten.json";
 $daten = [];
@@ -11,7 +11,7 @@ if (file_exists($datei)) {
     }
 }
 ?>
-// endregion
+// HTML Script der Website
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -48,7 +48,7 @@ if (file_exists($datei)) {
   </style>
 </head>
 <body>
-  <h1>Radar Visualisierung</h1>
+  <h1>Radar</h1>
   <canvas id="radarCanvas" width="500" height="250"></canvas>
 
   <h2>Letzte Messwerte</h2>
