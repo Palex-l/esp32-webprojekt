@@ -161,7 +161,8 @@ function zeichneRadar() {
     radardaten.forEach(p => {
       const winkel = p.winkel || p.sensor1;
       const dist = p.dist || p.sensor2;
-      const radius = (dist / maxDist) * 200;
+      const radius = (dist / 1000) * 200;
+      console.log(radius);
       const rad = winkel * Math.PI / 180;
       const x = mitteX + Math.cos(rad) * radius;
       const y = mitteY - Math.sin(rad) * radius;
