@@ -132,28 +132,34 @@ if (file_exists($datei)) {
       // Sektoren statt Punkte
       if (typeof radardaten !== "undefined") {
 radardaten.forEach(p => {
-  const winkel = p.winkel; // 0-180°
+  const winkel = p.winkel; // 0° (rechts) bis 180° (links)
   const dist = p.dist;
   const radius = (dist / maxDist) * 200;
 
-  // Umrechnung in Bogenmaß für oberen Halbkreis
-  const centerAngle = (180 - winkel) * Math.PI / 180;
-  const arcWidth = 10 * Math.PI / 180; // ±5°
+  const mitteX = 250;
+  const mitteY = 250;
 
-  const startAngle = centerAngle - arcWidth / 2;
-  const endAngle = centerAngle + arcWidth / 2;
+  // Radarwinkel umrechnen: 0° = rechts, 90° = oben, 180° = links
+  const winkelRad = (Math.PI * (180 - winkel)) / 180;
 
+  // Start- und Endwinkel für den Kreisbogen (±5° als Sektor)
+  const sektorBreite = 10; // in Grad
+  const startWinkel = (Math.PI * (180 - (winkel - sektorBreite / 2))) / 180;
+  const endWinkel   = (Math.PI * (180 - (winkel + sektorBreite / 2))) / 180;
+
+  // Zeichne gefüllten Bogen (Kreissegment)
   ctx.beginPath();
   ctx.moveTo(mitteX, mitteY);
-  ctx.arc(mitteX, mitteY, radius, startAngle, endAngle);
+  ctx.arc(mitteX, mitteY, radius, startWinkel, endWinkel, false);
   ctx.closePath();
-  ctx.fillStyle = "rgba(0,255,0,0.4)";
+  ctx.fillStyle = "rgba(0, 255, 0, 0.4)";
   ctx.fill();
 });
 
+
       }
     }
-
+    console.log(radardaten);
     zeichneRadar();
 
     // Alle 500ms nur Radar & Tabelle neu laden
