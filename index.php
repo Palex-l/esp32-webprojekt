@@ -32,7 +32,7 @@ foreach ($zeilen as $zeile) {
       background-color: #000;
       margin: 20px auto;
       display: block;
-      border-radius: 100% 100% 500 50;
+      border-radius: 100% 100% 50 50;
     }
     table {
       margin: 20px auto;
