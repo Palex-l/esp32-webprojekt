@@ -117,7 +117,7 @@ foreach ($zeilen as $zeile) {
     function zeichneRadar() {
       const canvas = document.getElementById("radarCanvas");
       const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, 500, 250);
+      ctx.clearRect(0, 0, 250, 150);
 
       const mitteX = 250;
       const mitteY = 250;
@@ -132,7 +132,7 @@ foreach ($zeilen as $zeile) {
       }
 
       // Linien alle 30°
-      for (let winkel = 0; winkel <= 180; winkel += 30) {
+      for (let winkel = 0; winkel <= 180; winkel += 20) {
         const rad = winkel * Math.PI / 180;
         const x = mitteX + Math.cos(rad) * 200;
         const y = mitteY - Math.sin(rad) * 200;
@@ -161,6 +161,10 @@ foreach ($zeilen as $zeile) {
     }
 
     zeichneRadar();
+      
+    setTimeout(() => {
+     location.reload();
+    }, 500); // 5000 Millisekunden = 5 Sekunden
   </script>
 </body>
 </html>
