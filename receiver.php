@@ -1,35 +1,38 @@
 <?php
-$dataFile = "/tmp/daten.txt";
+$filename = "daten.json";
 $maxLines = 1000;
 
-if (isset($_GET['data'])) {
-    $data = trim($_GET['data']);
+// Neue Werte aus URL
+$s1 = isset($_GET['sensor1']) ? (int)$_GET['sensor1'] : null;
+$s2 = isset($_GET['sensor2']) ? (int)$_GET['sensor2'] : null;
 
-    if (!empty($data)) {
-        // Bestehende Daten einlesen
-        $lines = file_exists($dataFile) ? file($dataFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
-
-        // Neue Zeile anhängen
-        $lines[] = $data;
-
-        // Auf max. 1000 Zeilen kürzen
-        if (count($lines) > $maxLines) {
-            $lines = array_slice($lines, -$maxLines);
-        }
-
-        // Zurückschreiben
-        if (file_put_contents($dataFile, implode("\n", $lines)) === false) {
-            echo "Kann daten.txt nicht schreiben";
-        } else {
-            echo "OK";
-        }
-    }
+if ($s1 === null || $s2 === null) {
+    http_response_code(400);
+    echo "Fehlende Daten.";
+    exit;
 }
 
-// Blinkstatus setzen
-if (isset($_GET['blink'])) {
-    $status = $_GET['blink'] === "on" ? "on" : "off";
-    file_put_contents("/tmp/blinkstatus.txt", $status);
-    echo "Blinkstatus gesetzt: $status";
+// Bestehende laden
+$daten = file_exists($filename) ? json_decode(file_get_contents($filename), true) : [];
+
+// Neuen Eintrag hinzufügen
+$daten[] = [
+    "datum" => date("Y-m-d"),
+    "zeit" => date("H:i:s"),
+    "sensor1" => $s1,
+    "sensor2" => $s2
+];
+
+// Auf max. 1000 Einträge beschränken
+if (count($daten) > $maxLines) {
+    $daten = array_slice($daten, -$maxLines);
+}
+
+// Datei speichern
+if (file_put_contents($filename, json_encode($daten, JSON_PRETTY_PRINT))) {
+    echo "OK";
+} else {
+    http_response_code(500);
+    echo "Fehler beim Schreiben.";
 }
 ?>
