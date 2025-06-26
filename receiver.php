@@ -1,5 +1,5 @@
 <?php
-$filename = "daten.json";
+$filename = "/tmp/daten.json";
 $maxLines = 1000;
 
 // Neue Werte aus URL
