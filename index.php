@@ -106,7 +106,7 @@ if (file_exists($datei)) {
                 $maxWinkel[$winkel] = true;
                 $anzeigen[] = $eintrag;
             }
-            if (count($anzeigen) >= 36) break; // Nur 20 Einträge anzeigen
+            if (count($anzeigen) >= 72) break; // Nur 20 Einträge anzeigen
         }
 
         // Anzeige wieder umkehren (älteste oben)
